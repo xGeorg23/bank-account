@@ -9,3 +9,15 @@ class InvalidOperationError(Exception):
 
 class InsufficientFundsError(Exception):
     pass
+
+class ValidationError(Exception):
+    pass
+
+class NotFoundError(Exception):
+    pass
+
+class NightOperationError(Exception):
+    pass
+
+class BlockedError(Exception):
+    pass

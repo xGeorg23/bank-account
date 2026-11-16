@@ -1,6 +1,5 @@
 from exception.bank_exception import InsufficientFundsError
 from model.bank_account import BankAccount
-from model.user import User
 from util.account_type import AccountType
 from util.currency import CurrencyType
 from util.status_account import StatusAccount
@@ -11,10 +10,10 @@ class PremiumAccount(BankAccount):
     commission:float
     increased_limits:float
 
-    def __init__(self, account_number, user: User, balance: float, status_account: StatusAccount, currency_type: CurrencyType,
+    def __init__(self, account_number, full_name: str, balance: float, status_account: StatusAccount, currency_type: CurrencyType,
                  account_type:AccountType, overdraft: float, commission: float, increased_limits: float):
 
-        super().__init__(account_number, user, balance, status_account, currency_type, account_type)
+        super().__init__(account_number, full_name, balance, status_account, currency_type, account_type)
         self.overdraft = overdraft
         self.commission = commission
         self.increased_limits = increased_limits

@@ -1,5 +1,5 @@
+from exception.bank_exception import NotFoundError
 from model.bank_account import BankAccount
-from model.user import User
 from util.account_type import AccountType
 from util.currency import CurrencyType
 from util.status_account import StatusAccount
@@ -8,10 +8,11 @@ from util.status_account import StatusAccount
 class InvestmentAccount(BankAccount):
     investment_active:dict[str, int]
 
-    def __init__(self, account_number, user: User, balance: float, status_account: StatusAccount,
-                 currency_type: CurrencyType, account_type:AccountType, investment_active):
-        super().__init__(account_number, user, balance, status_account, currency_type, account_type)
-        self.investment_active = investment_active
+    def __init__(self, account_number, full_name: str, balance: float, status_account: StatusAccount,
+                 currency_type: CurrencyType, account_type:AccountType):
+
+        super().__init__(account_number, full_name, balance, status_account, currency_type, account_type)
+        self.investment_active = {"stocks": 0, "bonds": 0, "etf": 0}
         self.update_active(balance)
 
     def deposit(self, amount:float):
@@ -34,7 +35,7 @@ class InvestmentAccount(BankAccount):
     def project_yearly_growth(self, growth_rates):
         for key in growth_rates:
             if key not in self.investment_active:
-                raise key(f"Недоступный актив {key}")
+                raise NotFoundError(f"Недоступный актив {key}")
 
         return ((self.investment_active["stocks"] * (growth_rates["stocks"] / 100)) +
                 (self.investment_active["bonds"] * (growth_rates["bonds"] / 100)) +

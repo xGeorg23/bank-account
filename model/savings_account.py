@@ -1,6 +1,5 @@
 from exception.bank_exception import InvalidOperationError
 from model.bank_account import BankAccount
-from model.user import User
 from util.account_type import AccountType
 from util.currency import CurrencyType
 from util.status_account import StatusAccount
@@ -10,10 +9,10 @@ class SavingsAccount(BankAccount):
     min_balance: float
     savings_percentage: float
 
-    def __init__(self, account_number, user: User, balance: float, status_account: StatusAccount,
+    def __init__(self, account_number, full_name: str, balance: float, status_account: StatusAccount,
                  currency_type: CurrencyType, account_type:AccountType, min_balance: float, savings_percentage: float):
 
-        super().__init__(account_number, user, balance, status_account, currency_type, account_type)
+        super().__init__(account_number, full_name, balance, status_account, currency_type, account_type)
         self.min_balance = min_balance
         self.savings_percentage = savings_percentage
 

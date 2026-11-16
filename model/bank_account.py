@@ -1,8 +1,8 @@
 import shortuuid
 
-from exception.bank_exception import InvalidOperationError, AccountClosedError, AccountFrozenError, InsufficientFundsError
+from exception.bank_exception import InvalidOperationError, AccountClosedError, AccountFrozenError, \
+    InsufficientFundsError
 from model.abstract_account import AbstractAccount
-from model.user import User
 from util.account_type import AccountType
 from util.currency import CurrencyType
 from util.status_account import StatusAccount
@@ -12,11 +12,13 @@ class BankAccount(AbstractAccount):
     currency_type:CurrencyType
     account_type:AccountType
 
-    def __init__(self, account_number, user: User, balance: float, status_account: StatusAccount, currency_type: CurrencyType, account_type:AccountType):
+    def __init__(self, account_number, full_name:str, balance: float, status_account: StatusAccount,
+                 currency_type: CurrencyType, account_type:AccountType):
+
         if account_number is None:
             account_number = shortuuid.uuid()
 
-        super().__init__(account_number, user, balance, status_account)
+        super().__init__(account_number, full_name, balance, status_account)
         self.currency_type = currency_type
         self.account_type = account_type
 

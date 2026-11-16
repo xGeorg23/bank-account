@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
 
-from model.user import User
 from util.status_account import StatusAccount
 
 
 class AbstractAccount(ABC):
     account_number:str
-    user:User
+    full_name:str
     __balance:float
     status_account:StatusAccount
 
-    def __init__(self, account_number, user:User, balance:float, status_account:StatusAccount):
+    def __init__(self, account_number, full_name:str, balance:float, status_account:StatusAccount):
         self.account_number = account_number
-        self.user = user
+        self.full_name = full_name
         self.__balance = balance
         self.status_account = status_account
 
@@ -27,9 +26,12 @@ class AbstractAccount(ABC):
     @abstractmethod
     def get_account_info(self):
         return (f"account_number = {self.account_number[-4:]}\n"
-                f"user = ({self.user.__str__()})\n"
+                f"user = {self.full_name}\n"
                 f"status = {self.status_account.value}\n"
                 f"balance = {self.__balance}")
 
-    def balance(self):
+    def balance(self) -> float:
         return self.__balance
+
+    def account_number(self) -> str:
+        return self.account_number
