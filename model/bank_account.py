@@ -1,6 +1,6 @@
 import shortuuid
 
-from exception.bank_exception import InvalidOperationError, AccountClosedError, AccountFrozenError
+from exception.bank_exception import InvalidOperationError, AccountClosedError, AccountFrozenError, InsufficientFundsError
 from model.abstract_account import AbstractAccount
 from model.user import User
 from util.account_type import AccountType
@@ -21,27 +21,27 @@ class BankAccount(AbstractAccount):
         self.account_type = account_type
 
     def deposit(self, amount:float):
-        if self.status_account == StatusAccount.CLOSE:
-            raise AccountClosedError("Аккаунт закрыт")
-        elif self.status_account == StatusAccount.FROZEN:
-            raise AccountFrozenError("Аккаунт заморожен")
-        elif amount <= 0:
-            raise InvalidOperationError("Сумма указаана некоректно")
-
+        self.validate(amount)
         super().deposit(amount)
 
     def withdraw(self, amount:float):
+        if amount > self.balance():
+            raise InsufficientFundsError("сумма баланса меньше суммы списания")
+
+        self.validate(amount)
+        super().withdraw(amount)
+
+    def get_account_info(self):
+        return f"accountType = {self.account_type.value}\n{super().get_account_info()} {self.currency_type.value}"
+
+
+    def __str__(self):
+        return self.get_account_info()
+
+    def validate(self, amount:float):
         if self.status_account == StatusAccount.CLOSE:
             raise AccountClosedError("Аккаунт закрыт")
         elif self.status_account == StatusAccount.FROZEN:
             raise AccountFrozenError("Аккаунт заморожен")
         elif amount <= 0:
-            raise InvalidOperationError("Сумма указаана некоректно")
-
-        super().withdraw(amount)
-
-    def get_account_info(self):
-        return f'accountType ={self.account_type.value}\n{super().get_account_info()} {self.currency_type.value}'
-
-    def __str__(self):
-        return f"{self.get_account_info()}"
+            raise InvalidOperationError("Сумма указана некоректно")

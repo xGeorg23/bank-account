@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from exception.bank_exception import InsufficientFundsError
 from model.user import User
 from util.status_account import StatusAccount
 
@@ -23,13 +22,14 @@ class AbstractAccount(ABC):
 
     @abstractmethod
     def withdraw(self, amount:float):
-        if amount > self.__balance:
-            raise InsufficientFundsError("сумма баланса меньше суммы списания")
         self.__balance -= amount
 
     @abstractmethod
     def get_account_info(self):
         return (f"account_number = {self.account_number[-4:]}\n"
                 f"user = ({self.user.__str__()})\n"
-                f"satus = {self.status_account.value}\n"
+                f"status = {self.status_account.value}\n"
                 f"balance = {self.__balance}")
+
+    def balance(self):
+        return self.__balance
