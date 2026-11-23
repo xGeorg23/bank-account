@@ -1,23 +1,31 @@
-class AccountFrozenError(Exception):
+class AccountFrozenError(Exception): 
     pass
 
-class AccountClosedError(Exception):
+class AccountClosedError(Exception): 
     pass
 
-class InvalidOperationError(Exception):
+class InvalidOperationError(Exception): 
     pass
 
-class InsufficientFundsError(Exception):
+class InsufficientFundsError(Exception): 
     pass
 
-class ValidationError(Exception):
+class ValidationError(Exception): 
     pass
 
-class NotFoundError(Exception):
+class NotFoundError(Exception): 
     pass
 
-class NightOperationError(Exception):
+class NightOperationError(Exception): 
     pass
 
-class BlockedError(Exception):
+class BlockedError(Exception): 
+    pass
+
+class TransactionError(Exception):
+    pass
+
+class TransactionProcessingError(Exception):
+    pass
+class TransactionFailedError(Exception):
     pass
