@@ -11,7 +11,7 @@ from util.currency import CurrencyType
 from util.transaction_type import TransactionType
 
 
-def main():
+def test_report():
     bank = Bank([])
     ivan = Client(1, "Иванов Иван Иванович", [], ["+7955001"], 35, "pass1", 0)
     anna = Client(2, "Петрова Анна Сергеевна", [], ["+7955002"], 28, "pass2", 0)
@@ -73,4 +73,4 @@ def main():
     print("Графики:", ", ".join(f"reports/{name}" for name in charts))
 
 
-test_()
+test_report()
