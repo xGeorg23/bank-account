@@ -17,14 +17,14 @@ class RiskAnalyzer:
         created_at = getattr(receiver, "created_at", None)
 
         if now is None:
-            now = datetime(2026, 11,23, 23,55)
+            now = datetime.now()
 
         if transaction.get_amount() > 100000:
             score += 2
             reasons.append(f"крупная сумма: {transaction.get_amount()}")
 
         for e in self.audit_log.filter(client_name=transaction.get_sender().full_name):
-            if (now - e.get_timestamp()).total_seconds() < 3600:
+            if 0 <= (now - e.get_timestamp()).total_seconds() < 3600:
                 recent.append(e)
 
         if len(recent) >= 3:

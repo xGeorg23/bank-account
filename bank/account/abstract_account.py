@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from datetime import time, datetime
+from datetime import datetime
 
-from exception.bank_exception import NightOperationError
+from exception.bank_exception import InvalidOperationError
 from util.status_account import StatusAccount
 
 
@@ -12,6 +12,9 @@ class AbstractAccount(ABC):
     status_account: StatusAccount
 
     def __init__(self, account_number, full_name: str, balance: float, status_account: StatusAccount):
+        if balance < 0:
+            raise InvalidOperationError("Баланс не может быть отрицательным")
+
         self.account_number = account_number
         self.full_name = full_name
         self.__balance = balance

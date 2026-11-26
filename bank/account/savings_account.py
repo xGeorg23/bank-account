@@ -28,5 +28,5 @@ class SavingsAccount(BankAccount):
     def __str__(self): 
         return self.get_account_info()
 
-    def apply_monthly_interest(self): 
-        super().deposit(super().balance() * (self.savings_percentage / 100) / 12)
+    def apply_monthly_interest(self):
+        super().deposit(super().balance() * self.savings_percentage / 100)

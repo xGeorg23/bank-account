@@ -13,7 +13,6 @@ from util.status_account import StatusAccount
 
 class Bank: 
     clients: list[Client]
-    time: datetime = datetime(2026, 11,23, 23,55)
 
     def __init__(self,clients: list[Client]): 
         self.clients = clients
@@ -110,7 +109,7 @@ class Bank:
     def withdraw(self, client_id: int, account_number: str, amount: int):
         account = self.search_accounts(client_id, account_number)
 
-        if time(0, 0) < self.time.time() < time(5, 0):
+        if time(0, 0) <= datetime.now().time() < time(5, 0):
             raise NightOperationError("Операции запрещены с 00: 00 до 05: 00")
 
         account.withdraw(amount)
@@ -119,7 +118,7 @@ class Bank:
         client = self.search_client(client_id)
         account = self.search_accounts(client_id, account_number)
 
-        if time(0, 0) < self.time.time() < time(5, 0):
+        if time(0, 0) <= datetime.now().time() < time(5, 0):
             client.set_suspiciously(True)
             raise NightOperationError("Операции запрещены с 00: 00 до 05: 00")
 

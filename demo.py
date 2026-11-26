@@ -140,9 +140,15 @@ def main():
         print(account.__str__())
         print()
 
-    print("История операций клиента из аудита:")
-    for entry in audit_log.filter(client_name=client.full_name()):
-        print(f"{entry}")
+    client_accounts = {a.get_account_number() for a in client.list_bank_account()}
+    print("История транзакций клиента (из истории очереди):")
+    for t in queue.get_history():
+        sender_num = t.get_sender().get_account_number()
+        receiver_num = t.get_receiver().get_account_number()
+        if sender_num in client_accounts or receiver_num in client_accounts:
+            print(f"  #{t.get_id()} {sender_num} -> {receiver_num} "
+                  f"{t.get_amount()} {t.get_currency_type().value} — {t.get_status().value}"
+                  + (f" ({t.get_failure_reason()})" if t.get_failure_reason() else ""))
 
     separator("4.1 Сценарий: подозрительные операции")
     print(report.suspicious_operations())
@@ -156,6 +162,10 @@ def main():
     print("Топ-3 клиентов по суммарному балансу:")
     for place, (c, total) in enumerate(totals[:3], start=1):
         print(f"{place}. {c.full_name()} — {total:,.0f}")
+
+    print("\nСтатистика транзакций:")
+    for status, count in queue.statistics().items():
+        print(f"  {status.value}: {count}")
 
     print("\nСтатистика ошибок:")
     print(report.error_statistics())

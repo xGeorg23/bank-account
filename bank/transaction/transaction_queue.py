@@ -6,11 +6,13 @@ from util.account_type import AccountType
 from util.status_account import StatusAccount
 from util.transaction_status import TransactionStatus
 
-class TransactionQueue: 
+class TransactionQueue:
     transactions: list[Transaction]
+    history: list[Transaction]
 
     def __init__(self): 
         self.transactions = []
+        self.history = []
 
     def add(self, transaction: Transaction):
         self.validation_transaction(transaction)
@@ -49,6 +51,20 @@ class TransactionQueue:
                 or transaction.get_status() == TransactionStatus.CANCELLED
                 or transaction.get_status() == TransactionStatus.FAILED):
             self.transactions.remove(transaction)
+            self.history.append(transaction)
+
+    def get_history(self) -> list[Transaction]:
+        return self.history
+
+    def statistics(self) -> dict:
+        stats = {status: 0 for status in TransactionStatus}
+
+        for t in self.history:
+            stats[t.get_status()] += 1
+        for t in self.transactions:
+            stats[t.get_status()] += 1
+
+        return stats
 
     def __str__(self): 
         lines = [f"В очереди: {len(self.transactions)} транзакций"]

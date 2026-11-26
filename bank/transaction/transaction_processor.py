@@ -9,7 +9,7 @@ from exception.bank_exception import (
     AccountClosedError,
     AccountFrozenError,
     InsufficientFundsError,
-    InvalidOperationError, TransactionError, )
+    InvalidOperationError, )
 from util.audit_level import AuditLevel
 from util.risk_level import RiskLevel
 from util.status_account import StatusAccount
@@ -34,10 +34,10 @@ class TransactionProcessor:
     }
 
     def __init__(self, transaction_queue: TransactionQueue,
-                 audit_log: AuditLog, risk_analyzer: RiskAnalyzer):
+                 audit_log: AuditLog = None, risk_analyzer: RiskAnalyzer = None):
         self.__transaction_queue = transaction_queue
-        self.__audit_log = audit_log
-        self.__risk_analyzer = risk_analyzer
+        self.__audit_log = audit_log or AuditLog()
+        self.__risk_analyzer = risk_analyzer or RiskAnalyzer(self.__audit_log)
         self.__attempts = {}
         self.__error_log = []
 
@@ -48,13 +48,18 @@ class TransactionProcessor:
                 continue
             self.process(transaction)
 
+            while transaction.get_status() == TransactionStatus.RETRY:
+                self.process(transaction)
+
     def process(self, transaction: Transaction):
         audit_level: AuditLevel
-        message: str = ""
         try:
             self.validate(transaction)
             commission = self.commission(transaction)
-            received = self.convert_amount(transaction)
+            debit = self.convert_amount(transaction, transaction.get_sender().get_currency_type(),
+                                        transaction.get_amount() + commission)
+            received = self.convert_amount(transaction, transaction.get_receiver().get_currency_type(),
+                                           transaction.get_amount())
             level, error_message = next(iter(self.__risk_analyzer.analyze(transaction).items()))
 
             if level == RiskLevel.HIGH:
@@ -62,15 +67,17 @@ class TransactionProcessor:
                                         transaction.get_sender().get_account_number(), "; ".join(error_message))
                 self.fail(transaction, f"Операция заблокирована: {'; '.join(error_message)}")
                 return
-            self.execute(transaction, commission, received)
+            self.execute(transaction, commission, debit, received)
 
             if level == RiskLevel.MEDIUM:
                 audit_level = AuditLevel.WARNING
             else:
                 audit_level = AuditLevel.INFO
 
+            message = (f"{transaction.get_amount()} {transaction.get_currency_type().value} "
+                       f"-> {transaction.get_receiver().get_account_number()} OK")
             if len(error_message) > 0:
-                message = f"{transaction.get_amount()} -> OK ({'; '.join(error_message)})"
+                message += f" ({'; '.join(error_message)})"
 
             self.__audit_log.record(audit_level, "transfer", transaction.get_sender().full_name,
                                      transaction.get_sender().get_account_number(), message)
@@ -81,9 +88,10 @@ class TransactionProcessor:
 
     def validate(self, transaction: Transaction):
         limit = None
-        required = transaction.get_amount() + self.commission(transaction)
         sender = transaction.get_sender()
         receiver = transaction.get_receiver()
+        required = self.convert_amount(transaction, sender.get_currency_type(),
+                                       transaction.get_amount() + self.commission(transaction))
 
         if receiver.get_status_account() == StatusAccount.FROZEN:
             raise AccountFrozenError("Замороженный счёт получателя")
@@ -107,23 +115,29 @@ class TransactionProcessor:
 
         return round(transaction.get_amount() * self.EXTERNAL_COMMISSION_RATE, 2)
 
-    def convert_amount(self, transaction: Transaction) -> float:
-        sender_currency = transaction.get_sender().get_currency_type()
-        receiver_currency = transaction.get_receiver().get_currency_type()
+    def convert_amount(self, transaction: Transaction, target_currency, amount: float) -> float:
+        source_currency = transaction.get_currency_type()
 
-        if sender_currency == receiver_currency:
-            return transaction.get_amount()
+        if source_currency == target_currency:
+            return amount
 
-        key = (sender_currency.value, receiver_currency.value)
+        rate = self.exchange_rate(source_currency, target_currency)
+        return round(amount * rate, 2)
 
-        if key not in self.EXCHANGE_RATES:
-            raise InvalidOperationError(f"Нет курса {sender_currency.value} -> {receiver_currency.value}")
+    def exchange_rate(self, source_currency, target_currency) -> float:
+        key = (source_currency.value, target_currency.value)
+        reverse_key = (target_currency.value, source_currency.value)
 
-        return round(transaction.get_amount() * self.EXCHANGE_RATES[key], 2)
+        if key in self.EXCHANGE_RATES:
+            return self.EXCHANGE_RATES[key]
+        if reverse_key in self.EXCHANGE_RATES:
+            return 1 / self.EXCHANGE_RATES[reverse_key]
 
-    def execute(self, transaction: Transaction, commission: float, received_amount: float):
+        raise InvalidOperationError(f"Нет курса {source_currency.value} -> {target_currency.value}")
+
+    def execute(self, transaction: Transaction, commission: float, debit_amount: float, received_amount: float):
         transaction.set_commission(commission)
-        transaction.get_sender().withdraw(transaction.get_amount() + commission)
+        transaction.get_sender().withdraw(debit_amount)
         transaction.get_receiver().deposit(received_amount)
         transaction.set_status(TransactionStatus.COMPLETED)
         transaction.set_completed_at(datetime.now())
@@ -142,6 +156,8 @@ class TransactionProcessor:
 
     def fail(self, transaction: Transaction, reason: str):
         transaction.set_status(TransactionStatus.FAILED)
+        transaction.set_failure_reason(reason)
+        transaction.set_completed_at(datetime.now())
         self.__error_log.append((transaction.get_id(), reason, datetime.now(), "final"))
         self.__transaction_queue.remove_transaction(transaction)
 

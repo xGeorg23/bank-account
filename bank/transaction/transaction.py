@@ -1,7 +1,5 @@
 from datetime import datetime
 
-import shortuuid
-
 from bank.account.bank_account import BankAccount
 from util.currency import CurrencyType
 from util.transaction_status import TransactionStatus
@@ -79,8 +77,22 @@ class Transaction:
     def get_transaction_type(self) -> TransactionType:
         return self.__transaction_type
 
-    def __str__(self): 
-        return (f"Transaction(id = {self.__id}, type = {self.__transaction_type.value}, "
-                f"amount = {self.__amount} {self.__currency_type.value}, "
-                f"status = {self.__status.value}, commission = {self.__commission}, "
-                f"priority = {self.__priority})")
+    def get_currency_type(self) -> CurrencyType:
+        return self.__currency_type
+
+    def get_failure_reason(self) -> str:
+        return self.__failure_reason
+
+    def set_failure_reason(self, failure_reason: str):
+        self.__failure_reason = failure_reason
+
+    def __str__(self):
+        result = (f"Transaction(id = {self.__id}, type = {self.__transaction_type.value}, "
+                  f"amount = {self.__amount} {self.__currency_type.value}, "
+                  f"status = {self.__status.value}, commission = {self.__commission}, "
+                  f"priority = {self.__priority})")
+
+        if self.__failure_reason:
+            result += f", причина отказа = {self.__failure_reason}"
+
+        return result
